@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>khvreddy Hostel & PG Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ==================== 1. LOGIN & PORTAL SELECTION VIEW ==================== -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-container">
+      <div class="login-brand">
+        <div class="khv-logo">
+          <svg viewBox="0 0 80 80" width="68" height="68">
+            <defs>
+              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4f46e5" />
+                <stop offset="100%" stop-color="#06b6d4" />
+              </linearGradient>
+            </defs>
+            <rect width="80" height="80" rx="20" fill="url(#logoGrad)" />
+            <path d="M18 60V28L40 14L62 28V60H48V42H32V60H18Z" fill="#ffffff" />
+            <circle cx="40" cy="29" r="5" fill="#facc15" />
+            <text x="40" y="74" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="bold" font-family="sans-serif">KHVREDDY</text>
+          </svg>
+        </div>
+        <h1>khvreddy Hostel & PG</h1>
+        <p class="brand-address">📍 Plot No. 42, Main Road, Near Metro Station, Madhapur, Hyderabad - 500081</p>
+        <p class="brand-contact">📞 +91 98765 43210 | ✉️ info@khvreddyhostel.com</p>
+      </div>
+
+      <div class="login-tabs">
+        <button class="login-tab active" id="tab-btn-admin" onclick="switchLoginTab('admin')">Admin / Owner Login</button>
+        <button class="login-tab" id="tab-btn-resident" onclick="switchLoginTab('resident')">Resident / Student Login</button>
+      </div>
+
+      <!-- Admin Login Form -->
+      <form id="admin-login-form" class="login-form active" onsubmit="handleAdminLogin(event)">
+        <div class="form-group">
+          <label>Admin Username / Email</label>
+          <input type="text" id="admin-user" value="admin@khvreddy.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="admin-pass" value="admin123" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login to Admin Dashboard</button>
+        <div class="login-hint">Default Admin: <b>admin@khvreddy.com</b> / <b>admin123</b></div>
+      </form>
+
+      <!-- Resident Login Form -->
+      <form id="resident-login-form" class="login-form" onsubmit="handleResidentLogin(event)">
+        <div class="form-group">
+          <label>Resident ID or Mobile Number</label>
+          <input type="text" id="res-login-id" value="HMS20260001" placeholder="e.g. HMS20260001 or Mobile" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="res-login-pass" value="123456" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login to Resident Portal</button>
+        <div class="login-hint">Demo Residents: <b>HMS20260001</b>, <b>HMS20260002</b>, <b>HMS20260003</b> (Password: <b>123456</b>)</div>
+      </form>
+
+      <div class="login-footer-actions">
+        <button type="button" class="btn-link" onclick="resetSystemDatabase()">🔄 Reset Demo Database to Fresh State</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. ADMIN / OWNER PORTAL ==================== -->
+  <div id="admin-portal" class="portal-layout hidden">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-icon">KHV</div>
+        <div>
+          <h2>khvreddy</h2>
+          <span>Owner / Admin Portal</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="openAdminTab('dashboard', this)">📊 1. Dashboard</a>
+        <a class="nav-item" onclick="openAdminTab('rooms', this)">🛏️ 2. Rooms (24 Rooms)</a>
+        <a class="nav-item" onclick="openAdminTab('register', this)">➕ 3. Register Resident</a>
+        <a class="nav-item" onclick="openAdminTab('residents', this)">👥 4. Active Residents & Fees</a>
+        <a class="nav-item" onclick="openAdminTab('verifications', this)">✅ 5. Payment Verifications <span id="badge-pending-count" class="nav-badge">0</span></a>
+        <a class="nav-item" onclick="openAdminTab('cash-counter', this)">💵 6. Cash & QR Counter</a>
+        <a class="nav-item" onclick="openAdminTab('history', this)">📂 7. Vacated History Archive</a>
+        <a class="nav-item" onclick="openAdminTab('revenue-tax', this)">📈 8. Revenue & Tax</a>
+        <a class="nav-item" onclick="openAdminTab('notifications', this)">🔔 9. Notifications <span id="badge-notif-count" class="nav-badge">0</span></a>
+        <a class="nav-item" onclick="openAdminTab('settings', this)">⚙️ 10. Payment & Bank Config</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="hostel-mini-info">📍 Madhapur, Hyderabad</div>
+        <button class="btn btn-danger btn-block" onclick="logoutUser()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="portal-main">
+      <!-- Top Header -->
+      <header class="portal-topbar">
+        <div>
+          <h2 id="admin-page-title">Admin Dashboard</h2>
+          <p class="topbar-sub">khvreddy Hostel & PG | Plot No. 42, Main Road, Near Metro Station, Hyderabad - 500081</p>
+        </div>
+        <div class="topbar-right">
+          <span class="role-pill">👑 Hostel Owner</span>
+        </div>
+      </header>
+
+      <!-- TAB 1: ADMIN DASHBOARD -->
+      <section id="admin-tab-dashboard" class="tab-section active">
+        <div class="metrics-grid" id="admin-dashboard-metrics"></div>
+
+        <!-- Visual Charts Row -->
+        <div class="charts-grid">
+          <div class="card">
+            <h3>Monthly Revenue Overview</h3>
+            <canvas id="chart-monthly-revenue" width="420" height="220"></canvas>
+          </div>
+          <div class="card">
+            <h3>Room Occupancy & Payment Modes</h3>
+            <canvas id="chart-occupancy-modes" width="420" height="220"></canvas>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>Recently Joined Residents</h3>
+            <div class="table-container">
+              <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Room/Bed</th><th>Joined</th><th>Fee</th></tr></thead>
+                <tbody id="dash-recent-joined"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Recently Vacated Residents</h3>
+            <div class="table-container">
+              <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Room</th><th>Joined</th><th>Vacated</th></tr></thead>
+                <tbody id="dash-recent-vacated"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-top:20px;">
+          <div class="card">
+            <h3>Recent Payments</h3>
+            <div class="table-container">
+              <table>
+                <thead><tr><th>Receipt</th><th>Resident</th><th>Amount</th><th>Mode</th><th>Status</th></tr></thead>
+                <tbody id="dash-recent-payments"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Pending Fee Payment List</h3>
+            <div class="table-container">
+              <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Room</th><th>Due</th><th>Pending</th><th>Status</th></tr></thead>
+                <tbody id="dash-pending-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: HOSTEL ROOM MANAGEMENT (20-30 ROOMS) -->
+      <section id="admin-tab-rooms" class="tab-section">
+        <div class="section-toolbar">
+          <div class="filter-group">
+            <select id="room-status-filter" onchange="renderRoomsSection()">
+              <option value="ALL">All Room Statuses</option>
+              <option value="Available">Available</option>
+              <option value="Partially Occupied">Partially Occupied</option>
+              <option value="Full">Full</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="openRoomModal()">+ Add New Room</button>
+        </div>
+
+        <div id="rooms-visual-grid" class="rooms-visual-grid"></div>
+      </section>
+
+      <!-- TAB 3: RESIDENT REGISTRATION -->
+      <section id="admin-tab-register" class="tab-section">
+        <div class="card">
+          <h3>New Resident / Student Registration Form</h3>
+          <form id="resident-registration-form" onsubmit="handleRegisterResident(event)">
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label>Resident ID (Auto-Generated)</label>
+                <input type="text" id="reg-id" readonly class="readonly-input">
+              </div>
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="reg-name" placeholder="Enter Full Name" required>
+              </div>
+              <div class="form-group">
+                <label>Father's / Mother's / Guardian Name *</label>
+                <input type="text" id="reg-guardian" placeholder="Guardian Name" required>
+              </div>
+              <div class="form-group">
+                <label>Mobile Number *</label>
+                <input type="text" id="reg-mobile" placeholder="10-digit Mobile" required>
+              </div>
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" id="reg-email" placeholder="student@email.com" required>
+              </div>
+              <div class="form-group">
+                <label>Gender *</label>
+                <select id="reg-gender" required>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Date of Birth *</label>
+                <input type="date" id="reg-dob" required>
+              </div>
+              <div class="form-group">
+                <label>Emergency Contact Number *</label>
+                <input type="text" id="reg-emergency" placeholder="Parent / Emergency Phone" required>
+              </div>
+              <div class="form-group">
+                <label>ID Proof Type *</label>
+                <select id="reg-id-type" required>
+                  <option value="Aadhaar Card">Aadhaar Card</option>
+                  <option value="PAN Card">PAN Card</option>
+                  <option value="Passport">Passport</option>
+                  <option value="College ID">College / Company ID</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>ID Proof Number *</label>
+                <input type="text" id="reg-id-number" placeholder="XXXX-XXXX-XXXX" required>
+              </div>
+              <div class="form-group">
+                <label>Select Available Room *</label>
+                <select id="reg-room-select" onchange="onRegRoomChange()" required></select>
+              </div>
+              <div class="form-group">
+                <label>Select Available Bed Number *</label>
+                <select id="reg-bed-select" required></select>
+              </div>
+              <div class="form-group">
+                <label>Monthly Fee (₹) *</label>
+                <input type="number" id="reg-monthly-fee" required>
+              </div>
+              <div class="form-group">
+                <label>Security Deposit (₹) *</label>
+                <input type="number" id="reg-deposit" value="5000" required>
+              </div>
+              <div class="form-group">
+                <label>Joining Date *</label>
+                <input type="date" id="reg-joining-date" required>
+              </div>
+              <div class="form-group">
+                <label>Expected Vacating Date</label>
+                <input type="date" id="reg-expected-vacate">
+              </div>
+              <div class="form-group">
+                <label>Initial Payment Collected (₹)</label>
+                <input type="number" id="reg-init-payment" value="0" min="0">
+              </div>
+              <div class="form-group">
+                <label>Payment Mode</label>
+                <select id="reg-pay-mode">
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Payment Transaction ID / Ref</label>
+                <input type="text" id="reg-tx-id" placeholder="UTR or Receipt Ref">
+              </div>
+              <div class="form-group">
+                <label>Portal Login Password *</label>
+                <input type="text" id="reg-password" value="123456" required>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Permanent Residential Address *</label>
+                <input type="text" id="reg-address" placeholder="House No, Street, Village/City, State, PIN" required>
+              </div>
+              <div class="form-group">
+                <label>Additional Notes / Remarks</label>
+                <input type="text" id="reg-notes" placeholder="Food preference, medical notes, etc.">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Register Resident & Allocate Bed</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 4: ACTIVE RESIDENTS, SEARCH, MONTHLY FEE TRACKING & VACATE -->
+      <section id="admin-tab-residents" class="tab-section">
+        <div class="section-toolbar">
+          <input type="text" id="search-resident-input" placeholder="🔍 Search by Resident ID, Name, Mobile, or Room..." oninput="renderResidentsDirectory()">
+          <select id="filter-resident-pay-status" onchange="renderResidentsDirectory()">
+            <option value="ALL">All Payment Statuses</option>
+            <option value="Paid">Paid</option>
+            <option value="Partially Paid">Partially Paid</option>
+            <option value="Pending">Pending</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Resident ID</th>
+                  <th>Full Name & Mobile</th>
+                  <th>Address</th>
+                  <th>Room & Bed</th>
+                  <th>Joining Date</th>
+                  <th>Monthly Fee</th>
+                  <th>Total Due</th>
+                  <th>Total Paid</th>
+                  <th>Pending</th>
+                  <th>Fee Status</th>
+                  <th>Actions (Ledger / Vacate)</th>
+                </tr>
+              </thead>
+              <tbody id="active-residents-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: ONLINE PAYMENT PROOF VERIFICATIONS -->
+      <section id="admin-tab-verifications" class="tab-section">
+        <div class="card">
+          <h3>Online Payment Submissions (Pending & Processed)</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Payment ID</th>
+                  <th>Resident</th>
+                  <th>Room</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Mode</th>
+                  <th>UTR / Transaction ID</th>
+                  <th>Proof</th>
+                  <th>Status</th>
+                  <th>Admin Action</th>
+                </tr>
+              </thead>
+              <tbody id="verifications-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: CASH & FRONT-DESK EXACT-AMOUNT QR COUNTER -->
+      <section id="admin-tab-cash-counter" class="tab-section">
+        <div class="two-col">
+          <div class="card">
+            <h3>Manual Cash / Front-Desk Fee Recording</h3>
+            <form onsubmit="handleAdminCashOrQRPayment(event)">
+              <div class="form-group">
+                <label>Select Active Resident *</label>
+                <select id="counter-resident-id" onchange="onCounterResidentChange()" required></select>
+              </div>
+              <div class="form-group">
+                <label>Resident Name</label>
+                <input type="text" id="counter-resident-name" readonly class="readonly-input">
+              </div>
+              <div class="form-group">
+                <label>Fee Amount to Pay (₹) *</label>
+                <input type="number" id="counter-amount" min="1" placeholder="Type exact fee amount (e.g. 6000)" oninput="renderExactAmountQR('counter-amount', 'counter-qr-container', 'counter-qr-badge')" required>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Payment Date *</label>
+                  <input type="date" id="counter-date" required>
+                </div>
+                <div class="form-group">
+                  <label>Payment Mode *</label>
+                  <select id="counter-mode">
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI QR Scanner</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Receipt / UTR Number *</label>
+                  <input type="text" id="counter-receipt" required>
+                </div>
+                <div class="form-group">
+                  <label>Remarks</label>
+                  <input type="text" id="counter-remarks" placeholder="Front desk payment">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Save Payment & Generate Digital Receipt</button>
+            </form>
+          </div>
+
+          <div class="card qr-standee-box">
+            <div class="standee-badge">✔ khvreddy Verified UPI Standee</div>
+            <h3>Front-Desk Dynamic QR Scanner</h3>
+            <p class="muted-text">QR Scanner displays <b>only</b> for the exact fee amount entered on the left.</p>
+            <div id="counter-qr-container" class="qr-display-frame"></div>
+            <div id="counter-qr-badge" class="qr-amount-pill">Enter amount to display QR</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: VACATED RESIDENT HISTORY ARCHIVE -->
+      <section id="admin-tab-history" class="tab-section">
+        <div class="section-toolbar">
+          <input type="text" id="search-history-input" placeholder="🔍 Search archive by ID, Name, Mobile, Room, Joining or Vacating Date..." oninput="renderVacatedHistory()">
+        </div>
+        <div class="card">
+          <h3>Archived / Vacated Residents History</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Resident ID</th>
+                  <th>Name & Mobile</th>
+                  <th>Address</th>
+                  <th>Room/Bed</th>
+                  <th>Joined</th>
+                  <th>Vacated</th>
+                  <th>Total Stay</th>
+                  <th>Total Paid</th>
+                  <th>Pending</th>
+                  <th>Reason & Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="vacated-history-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 8: REVENUE & TAX MANAGEMENT -->
+      <section id="admin-tab-revenue-tax" class="tab-section">
+        <div class="metrics-grid" id="revenue-metrics-cards"></div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>Tax Configuration & Net Revenue Calculator</h3>
+            <p class="muted-text">Note: Tax calculations are for hostel management/reporting purposes and are configurable according to applicable tax rules.</p>
+            <div class="form-group" style="margin-top:14px;">
+              <label>Applicable Tax Rate (%)</label>
+              <input type="number" id="tax-rate-config" min="0" max="50" step="0.5" value="10" oninput="updateTaxRateConfig()">
+            </div>
+            <div class="tax-summary-box" id="tax-summary-breakdown"></div>
+          </div>
+
+          <div class="card">
+            <h3>Payment Mode Revenue Breakdown</h3>
+            <div id="revenue-mode-breakdown" class="tax-summary-box"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 9: NOTIFICATIONS -->
+      <section id="admin-tab-notifications" class="tab-section">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3>System Notifications & Alerts</h3>
+            <button class="btn btn-sm" onclick="markAllNotificationsRead()">Mark All Read</button>
+          </div>
+          <div id="notifications-list"></div>
+        </div>
+      </section>
+
+      <!-- TAB 10: ADMIN PAYMENT SETTINGS -->
+      <section id="admin-tab-settings" class="tab-section">
+        <div class="card" style="max-width:650px;">
+          <h3>Configure Hostel UPI & Bank Details</h3>
+          <form onsubmit="savePaymentConfig(event)">
+            <div class="form-group"><label>Hostel Name</label><input type="text" id="cfg-hostel-name" required></div>
+            <div class="form-group"><label>Hostel Address</label><input type="text" id="cfg-hostel-address" required></div>
+            <div class="form-group"><label>Hostel UPI ID</label><input type="text" id="cfg-upi-id" required></div>
+            <div class="form-group"><label>Bank Name</label><input type="text" id="cfg-bank-name" required></div>
+            <div class="form-group"><label>Account Holder Name</label><input type="text" id="cfg-acc-holder" required></div>
+            <div class="form-group"><label>Bank Account Number</label><input type="text" id="cfg-acc-num" required></div>
+            <div class="form-group"><label>IFSC Code</label><input type="text" id="cfg-ifsc" required></div>
+            <button type="submit" class="btn btn-primary">Save Configuration</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ==================== 3. RESIDENT / STUDENT PORTAL ==================== -->
+  <div id="resident-portal" class="portal-layout hidden">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-icon">KHV</div>
+        <div>
+          <h2>khvreddy</h2>
+          <span id="res-nav-subtitle">Resident Portal</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="openResidentTab('profile', this)">👤 My Profile & Stay</a>
+        <a class="nav-item" onclick="openResidentTab('fees', this)">📅 Monthly Fee Schedule</a>
+        <a class="nav-item" onclick="openResidentTab('pay', this)">📲 Make Online Payment (QR)</a>
+        <a class="nav-item" onclick="openResidentTab('history', this)">🧾 My Payment History</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="hostel-mini-info">📍 Madhapur, Hyderabad</div>
+        <button class="btn btn-danger btn-block" onclick="logoutUser()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="portal-main">
+      <header class="portal-topbar">
+        <div>
+          <h2 id="res-welcome-heading">Welcome, Resident</h2>
+          <p class="topbar-sub" id="res-hostel-address-bar">khvreddy Hostel & PG | Plot No. 42, Main Road, Hyderabad</p>
+        </div>
+        <div class="topbar-right">
+          <span class="role-pill" id="res-status-pill">Active Resident</span>
+        </div>
+      </header>
+
+      <!-- RESIDENT TAB 1: MY PROFILE, FEE SUMMARY & STAY DETAILS -->
+      <section id="res-tab-profile" class="tab-section active">
+        <div class="metrics-grid" id="resident-summary-cards"></div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>My Personal & Room Profile</h3>
+            <div id="resident-profile-grid" class="info-grid"></div>
+          </div>
+          <div class="card">
+            <h3>My Stay Duration & Fee Account</h3>
+            <div id="resident-stay-grid" class="info-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESIDENT TAB 2: MONTHLY FEE TRACKING -->
+      <section id="res-tab-fees" class="tab-section">
+        <div class="card">
+          <h3>My Monthly Fee Ledger</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>Month</th><th>Amount Due</th><th>Amount Paid</th><th>Pending Amount</th><th>Next Due Date</th><th>Status</th></tr>
+              </thead>
+              <tbody id="resident-monthly-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESIDENT TAB 3: MAKE ONLINE PAYMENT (EXACT-AMOUNT QR SCANNER) -->
+      <section id="res-tab-pay" class="tab-section">
+        <div class="two-col">
+          <div class="card">
+            <h3>Step 1: Enter Fee Amount & Submit Payment Details</h3>
+            <div id="res-payment-account-banner" class="account-banner"></div>
+
+            <div class="quick-chips">
+              <button type="button" class="chip" onclick="setResQuickAmount('pending')">Pay Pending Due</button>
+              <button type="button" class="chip" onclick="setResQuickAmount('monthly')">1 Month Fee</button>
+              <button type="button" class="chip" onclick="setResQuickAmount(2000)">₹2,000</button>
+              <button type="button" class="chip" onclick="setResQuickAmount(4000)">₹4,000</button>
+            </div>
+
+            <form id="resident-online-pay-form" onsubmit="handleResidentOnlinePayment(event)">
+              <div class="form-group">
+                <label>How much fee do you want to pay? (₹) *</label>
+                <input type="number" id="res-pay-amount" min="1" class="highlight-amount-field" placeholder="Enter exact fee amount here (e.g. 5000)" oninput="renderExactAmountQR('res-pay-amount', 'res-qr-container', 'res-qr-badge')" required>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Payment Date *</label>
+                  <input type="date" id="res-pay-date" required>
+                </div>
+                <div class="form-group">
+                  <label>Payment Mode *</label>
+                  <select id="res-pay-mode">
+                    <option value="UPI">UPI / QR Code</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Transaction ID / 12-Digit UTR Number *</label>
+                <input type="text" id="res-pay-utr" placeholder="e.g. 123456789012" required>
+              </div>
+              <div class="form-group">
+                <label>Upload Payment Screenshot / Proof (Optional)</label>
+                <input type="file" id="res-pay-proof" accept="image/*" onchange="handleProofUpload(event)">
+              </div>
+              <div class="form-group">
+                <label>Remarks</label>
+                <input type="text" id="res-pay-remarks" placeholder="e.g. Monthly hostel fee">
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Submit Payment for Verification</button>
+            </form>
+          </div>
+
+          <!-- Right Column: Exact-Amount QR Code & Bank Details -->
+          <div class="card qr-standee-box">
+            <div class="standee-badge">✔ Official Hostel Payment QR Scanner</div>
+            <h3 id="res-qr-hostel-title">khvreddy Hostel & PG</h3>
+            <p class="muted-text">UPI ID: <b id="res-qr-upi-id">khvreddy@upi</b></p>
+
+            <!-- QR Scanner Container (Shows ONLY for the exact amount entered) -->
+            <div id="res-qr-container" class="qr-display-frame"></div>
+            <div id="res-qr-badge" class="qr-amount-pill">Enter fee amount to show QR</div>
+
+            <div class="bank-details-box" id="res-bank-details-box"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESIDENT TAB 4: MY PAYMENT HISTORY & RECEIPTS -->
+      <section id="res-tab-history" class="tab-section">
+        <div class="card">
+          <h3>My Payment History & Digital Receipts</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>Date</th><th>Receipt / ID</th><th>Amount</th><th>Payment Mode</th><th>Transaction ID</th><th>Status</th><th>Receipt</th></tr>
+              </thead>
+              <tbody id="resident-history-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ==================== MODALS (VACATE, ROOM ADD/EDIT, LEDGER, RECEIPT) ==================== -->
+  <!-- 1. Vacate Resident Modal -->
+  <div id="vacate-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Vacate Resident & Checkout</h3>
+      <form onsubmit="confirmVacateResident(event)">
+        <input type="hidden" id="vac-resident-id">
+        <p id="vac-resident-summary" class="modal-subtitle"></p>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Vacating Date *</label>
+            <input type="date" id="vac-date" required>
+          </div>
+          <div class="form-group">
+            <label>Reason for Leaving *</label>
+            <input type="text" id="vac-reason" value="Course / Job Completed" required>
+          </div>
+          <div class="form-group">
+            <label>Final Fee Paid at Checkout (₹)</label>
+            <input type="number" id="vac-final-paid" value="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Refundable Security Deposit (₹)</label>
+            <input type="number" id="vac-refund" value="0" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Remarks</label>
+          <input type="text" id="vac-remarks" placeholder="Keys returned, no damages">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('vacate-modal')">Cancel</button>
+          <button type="submit" class="btn btn-danger">Confirm Vacate & Free Bed</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add / Edit Room Modal -->
+  <div id="room-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3 id="room-modal-title">Add / Edit Room</h3>
+      <form onsubmit="saveRoomModal(event)">
+        <input type="hidden" id="rm-edit-original">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Room Number *</label>
+            <input type="text" id="rm-number" placeholder="e.g. 101" required>
+          </div>
+          <div class="form-group">
+            <label>Floor / Block *</label>
+            <input type="text" id="rm-floor" placeholder="e.g. 1st Floor - Block A" required>
+          </div>
+          <div class="form-group">
+            <label>Bed Capacity *</label>
+            <input type="number" id="rm-capacity" min="1" max="10" value="4" required>
+          </div>
+          <div class="form-group">
+            <label>Monthly Fee per Person (₹) *</label>
+            <input type="number" id="rm-fee" min="500" value="6000" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Maintenance Status Override</label>
+          <select id="rm-maint">
+            <option value="Normal">Normal (Auto-Calculate Status)</option>
+            <option value="Maintenance">Under Maintenance</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('room-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Room</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Resident Monthly Ledger Modal (For Admin) -->
+  <div id="ledger-modal" class="modal-overlay hidden">
+    <div class="modal-card modal-lg">
+      <h3 id="ledger-modal-title">Resident Monthly Fee & Payment History</h3>
+      <div id="ledger-modal-body"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('ledger-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Digital Printable Receipt Modal -->
+  <div id="receipt-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div id="printable-receipt-area" class="receipt-box"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('receipt-modal')">Close</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
